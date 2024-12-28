@@ -1,0 +1,17 @@
+export const API_ENDPOINTS = {
+  SIGNUP: "/auth/signup",
+  LOGIN: "/auth/login",
+  LOGOUT: "/auth/logout",
+  FOROGT_PASSWORD: "/auth/forgotPassword",
+  RESET_PASSWORD: "/auth/resetPassword",
+  VERIFY_OTP: "auth/verify",
+  REQUEST_NEW_OTP: "/auth/requestNewOtp",
+  REFRESH_ACCESS_TOKEN: "/auth/refreshAccessToken",
+  CHANGE_PASSWORD: "/auth/ChangePassword",
+  UPDATE_ME: "/user/updateMe",
+  BOOKING: "/booking",
+  EVENT: "/event",
+  RSRV: "/reserveSpot",
+  COMMENT: "/comments",
+  LIKE: "/like",
+};

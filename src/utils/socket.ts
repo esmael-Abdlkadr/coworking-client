@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socketUrl = "http://localhost:5000";
+const socketUrl = "https://coworking-api-abys.onrender.com";
 const socket = io(socketUrl, {
   transports: ["websocket"],
   reconnectionAttempts: 5,

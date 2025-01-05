@@ -25,6 +25,7 @@ import BlogContent from "../components/BlogContent";
 import BlogComments from "../components/BlogComments";
 import BlogSidebar from "../components/BlogSidebar";
 import Blogs from "../sections/Blogs";
+import React from "react";
 
 interface Comment {
   id: string;
@@ -109,10 +110,7 @@ function BlogDetail() {
   useEffect(() => {
     if (blog?.data?.id) {
       socket.emit("joinBlog", blog.data.id);
-      console.log(`Joined blog room: blog-${blog.data.id}`);
-
       const handleNewComment = (comment: Comment) => {
-        console.log("New comment received:", comment);
         setComments((prevComments) => {
           const updatedComments = [
             comment,
@@ -136,7 +134,7 @@ function BlogDetail() {
         dislikeCount: number;
         type: string;
       }) => {
-        console.log("Reaction updated received:", reaction);
+    
         setComments((prevComments) =>
           prevComments.map((comment) =>
             comment.id === reaction.commentId
@@ -156,7 +154,6 @@ function BlogDetail() {
         likeCount: number;
         dislikeCount: number;
       }) => {
-        console.log("Reaction removed received:", reaction);
         setComments((prevComments) =>
           prevComments.map((comment) =>
             comment.id === reaction.commentId
@@ -178,7 +175,6 @@ function BlogDetail() {
 
       return () => {
         socket.emit("leaveBlog", blog.data.id);
-        console.log(`Left blog room: blog-${blog.data.id}`);
         socket.off("newComment", handleNewComment);
         socket.off("deleteComment", handleDeleteComment);
         socket.off("reactionUpdated", handleReactionUpdated);

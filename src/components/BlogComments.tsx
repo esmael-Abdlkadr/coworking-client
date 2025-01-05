@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaThumbsUp,
   FaThumbsDown,
@@ -5,10 +6,12 @@ import {
   FaTrash,
   FaChevronDown,
   FaChevronUp,
+  FaReply,
 } from "react-icons/fa";
+import { formatDistanceToNow } from "date-fns";
 import Spinner from "./Spinner";
 import { useState } from "react";
-import { useGetTotalCommentsForBlog } from "../hooks/services";
+import React from "react";
 
 interface BlogCommentsProps {
   comments: Array<{
@@ -72,6 +75,224 @@ interface BlogCommentsProps {
   totalComments: number;
 }
 
+const CommentCard = ({ comment, isReply = false, ...props }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const hasReplies = comment.replies && comment.replies.length > 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`relative ${!isReply ? "border-b" : ""} border-gray-100 py-6`}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <div className="flex gap-4">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary-100 to-primary-200 flex items-center justify-center text-white font-semibold">
+            {comment.user.firstName[0]}
+            {comment.user.lastName[0]}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-grow">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-gray-900">
+              {comment.user.firstName} {comment.user.lastName}
+            </span>
+            <span className="text-sm text-gray-500">
+              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+            </span>
+          </div>
+
+          {props.editingCommentId === comment.id ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2"
+            >
+              <textarea
+                value={props.editingCommentContent}
+                onChange={(e) => props.setEditingCommentContent(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-transparent"
+                rows={3}
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => props.handleEditComment(comment.id)}
+                  disabled={props.isEditingComment}
+                  className="px-4 py-2 bg-primary-100 text-white rounded-lg hover:bg-primary-200 transition-colors"
+                >
+                  {props.isEditingComment ? <Spinner /> : "Save"}
+                </button>
+                <button
+                  onClick={() => props.setEditingCommentId(null)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <p className="text-gray-700">{comment.content}</p>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-4 mt-3">
+            <button
+              onClick={() => props.handleCommentReaction(comment.id, "like")}
+              className={`flex items-center gap-1 text-sm ${
+                comment.reaction === "like"
+                  ? "text-primary-100"
+                  : "text-gray-500 hover:text-primary-100"
+              } transition-colors`}
+            >
+              <FaThumbsUp />
+              <span>{comment.likeCount}</span>
+            </button>
+            <button
+              onClick={() => props.handleCommentReaction(comment.id, "dislike")}
+              className={`flex items-center gap-1 text-sm ${
+                comment.reaction === "dislike"
+                  ? "text-red-500"
+                  : "text-gray-500 hover:text-red-500"
+              } transition-colors`}
+            >
+              <FaThumbsDown />
+              <span>{comment.dislikeCount}</span>
+            </button>
+            {!isReply && (
+              <button
+                onClick={() => props.setReplyingToCommentId(comment.id)}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-100 transition-colors"
+              >
+                <FaReply />
+                <span>Reply</span>
+              </button>
+            )}
+            
+            {/* Show Replies Toggle */}
+            {!isReply && hasReplies && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-100 transition-colors ml-auto"
+              >
+                {showReplies ? <FaChevronUp /> : <FaChevronDown />}
+                <span>
+                  {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* User Actions */}
+          {props.loggedInUserId === comment.user._id && (
+            <AnimatePresence>
+              {isHovered && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="absolute top-6 right-6 flex gap-2"
+                >
+                  <button
+                    onClick={() => {
+                      props.setEditingCommentId(comment.id);
+                      props.setEditingCommentContent(comment.content);
+                    }}
+                    className="p-2 text-gray-500 hover:text-primary-100 transition-colors"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => props.handleDeleteComment(comment.id)}
+                    className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+                  >
+                    <FaTrash />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+
+          {/* Replies Section */}
+          {!isReply && (
+            <>
+              {/* Reply Form */}
+              {props.replyingToCommentId === comment.id && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="ml-12 mt-4"
+                >
+                  <textarea
+                    value={props.replyContent}
+                    onChange={(e) => props.setReplyContent(e.target.value)}
+                    placeholder="Write a reply..."
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-transparent"
+                    rows={3}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => props.handleAddReply(comment.id)}
+                      disabled={props.isAddingReply}
+                      className="px-4 py-2 bg-primary-100 text-white rounded-lg hover:bg-primary-200 transition-colors"
+                    >
+                      {props.isAddingReply ? <Spinner /> : "Reply"}
+                    </button>
+                    <button
+                      onClick={() => props.setReplyingToCommentId(null)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Replies List */}
+              <AnimatePresence>
+                {showReplies && hasReplies && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="ml-12 mt-4 space-y-4 overflow-hidden"
+                  >
+                    {comment.replies.map((reply) => (
+                      <CommentCard
+                        key={reply.id}
+                        comment={reply}
+                        isReply={true}
+                        {...{
+                          editingReplyId: props.editingReplyId,
+                          setEditingReplyId: props.setEditingReplyId,
+                          editingReplyContent: props.editingReplyContent,
+                          setEditingReplyContent: props.setEditingReplyContent,
+                          handleEditReply: props.handleEditReply,
+                          isEditingReply: props.isEditingReply,
+                          handleDeleteReply: props.handleDeleteReply,
+                          handleReplyReaction: props.handleReplyReaction,
+                          loggedInUserId: props.loggedInUserId,
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const BlogComments = ({
   comments,
   newComment,
@@ -108,332 +329,101 @@ const BlogComments = ({
   blogId,
   totalComments,
 }: BlogCommentsProps) => {
-  const [expandedComments, setExpandedComments] = useState<string[]>([]);
-  const { isError, isLoading } = useGetTotalCommentsForBlog(blogId);
-  console.log("comments", totalComments);
-  console.log("blogiD", blogId);
-  const toggleReplies = (commentId: string) => {
-    setExpandedComments((prev) =>
-      prev.includes(commentId)
-        ? prev.filter((id) => id !== commentId)
-        : [...prev, commentId]
-    );
-  };
+  const [showAllComments, setShowAllComments] = useState(false);
+  const displayedComments = showAllComments ? comments : comments.slice(0, 3);
+
+  if (commentsLoading) return <Spinner />;
+  if (commentsError) return <div>Error loading comments</div>;
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Comments</h2>
-      {isLoading ? (
-        <Spinner />
-      ) : isError ? (
-        <p className="text-red-500">Failed to load total comments</p>
-      ) : (
-        <p className="text-gray-500 mb-4">Total Comments: {totalComments}</p>
-      )}
-      <div className="flex items-start space-x-4 mb-6">
-        <textarea
-          placeholder="Add a public comment..."
-          className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary-100"
-          rows={2}
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        />
-        <button
-          className="px-4 py-2 bg-primary-100 text-white font-medium rounded-md hover:bg-primary-200 transition"
-          disabled={isAddingComment}
-          onClick={handleAddComment}
-        >
-          {isAddingComment ? "Posting..." : "Comment"}
-        </button>
-      </div>
-      <div className="space-y-4">
-        {commentsLoading ? (
-          <Spinner />
-        ) : commentsError ? (
-          <p className="text-red-500">Failed to load comments</p>
-        ) : comments.length === 0 ? (
-          <p className="text-gray-500">
-            No comments yet. Be the first to comment!
-          </p>
-        ) : (
-          comments.map((comment) => (
-            <div key={comment.id} className="space-y-2">
-              <div className="flex space-x-4">
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {comment.user.firstName} {comment.user.lastName}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </p>
-                  <p className="mt-1">{comment.content}</p>
-                  {editingCommentId === comment.id ? (
-                    <div className="mt-2">
-                      <textarea
-                        className="w-full border border-gray-300 rounded-md p-2"
-                        rows={1}
-                        value={editingCommentContent}
-                        onChange={(e) =>
-                          setEditingCommentContent(e.target.value)
-                        }
-                      />
-                      <div className="flex space-x-2 mt-2">
-                        <button
-                          className="px-4 py-1 bg-gray-300 text-gray-700 rounded-md"
-                          onClick={() => setEditingCommentId(null)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          className="px-4 py-1 bg-primary-100 text-white rounded-md"
-                          disabled={isEditingComment}
-                          onClick={() => handleEditComment(comment.id)}
-                        >
-                          {isEditingComment ? "Saving..." : "Save"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-4 mt-2 text-gray-600">
-                      <button
-                        onClick={() =>
-                          handleCommentReaction(comment.id, "like")
-                        }
-                        className={`flex items-center space-x-1 ${
-                          comment.reaction === "like" ? "text-green-600" : ""
-                        }`}
-                      >
-                        <FaThumbsUp />
-                        <span>{comment.likeCount}</span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleCommentReaction(comment.id, "dislike")
-                        }
-                        className={`flex items-center space-x-1 ${
-                          comment.reaction === "dislike" ? "text-red-600" : ""
-                        }`}
-                      >
-                        <FaThumbsDown />
-                        <span>{comment.dislikeCount}</span>
-                      </button>
-                      <button
-                        onClick={() => setReplyingToCommentId(comment.id)}
-                        className="text-primary-100"
-                      >
-                        Reply
-                      </button>
-                      {comment.user._id === loggedInUserId && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditingCommentId(comment.id);
-                              setEditingCommentContent(comment.content);
-                            }}
-                            className="text-blue-500"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            disabled={isDeletingComment}
-                            className="text-red-500"
-                          >
-                            <FaTrash />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              {replyingToCommentId === comment.id && (
-                <div className="ml-8 space-y-2">
-                  <textarea
-                    className="w-full border border-gray-300 rounded-md p-2"
-                    rows={1}
-                    placeholder="Write a reply..."
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                  />
-                  <div className="flex space-x-2">
-                    <button
-                      className="px-4 py-1 bg-gray-300 text-gray-700 rounded-md"
-                      onClick={() => setReplyingToCommentId(null)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-1 bg-primary-100 text-white rounded-md"
-                      disabled={isAddingReply}
-                      onClick={() => handleAddReply(comment.id)}
-                    >
-                      {isAddingReply ? "Replying..." : "Reply"}
-                    </button>
-                  </div>
-                </div>
-              )}
-              {(comment.replies?.length ?? 0) > 0 && (
-                <div className="ml-8 mt-4">
-                  <button
-                    className="text-primary-100 flex items-center"
-                    onClick={() => toggleReplies(comment.id)}
-                  >
-                    {expandedComments.includes(comment.id) ? (
-                      <>
-                        <FaChevronUp className="mr-1" />
-                        Hide replies
-                      </>
-                    ) : (
-                      <>
-                        <FaChevronDown className="mr-1" />
-                        {`${(comment.replies ?? []).length} replies`}
-                      </>
-                    )}
-                  </button>
-                  {expandedComments.includes(comment.id) &&
-                    (comment.replies ?? []).map(
-                      (reply: {
-                        id: string;
-                        user: {
-                          _id: string;
-                          firstName: string;
-                          lastName: string;
-                        };
-                        content: string;
-                        createdAt: string;
-                        reaction: string | null;
-                        likeCount: number;
-                        dislikeCount: number;
-                      }) => (
-                        <div key={reply.id} className="ml-4">
-                          <p className="font-semibold">
-                            {reply.user.firstName} {reply.user.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(reply.createdAt).toLocaleString()}
-                          </p>
-                          <p className="mt-1">{reply.content}</p>
-                          {editingReplyId === reply.id ? (
-                            <div className="mt-2">
-                              <textarea
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                rows={1}
-                                value={editingReplyContent}
-                                onChange={(e) =>
-                                  setEditingReplyContent(e.target.value)
-                                }
-                              />
-                              <div className="flex space-x-2 mt-2">
-                                <button
-                                  className="px-4 py-1 bg-gray-300 text-gray-700 rounded-md"
-                                  onClick={() => setEditingReplyId(null)}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  className="px-4 py-1 bg-primary-100 text-white rounded-md"
-                                  disabled={isEditingReply}
-                                  onClick={() => handleEditReply(reply.id)}
-                                >
-                                  {isEditingReply ? "Saving..." : "Save"}
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-4 mt-2 text-gray-600">
-                              <button
-                                onClick={() =>
-                                  handleReplyReaction(reply.id, "like")
-                                }
-                                className={`flex items-center space-x-1 ${
-                                  reply.reaction === "like"
-                                    ? "text-green-600"
-                                    : ""
-                                }`}
-                              >
-                                <FaThumbsUp />
-                                <span>{reply.likeCount}</span>
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleReplyReaction(reply.id, "dislike")
-                                }
-                                className={`flex items-center space-x-1 ${
-                                  reply.reaction === "dislike"
-                                    ? "text-red-600"
-                                    : ""
-                                }`}
-                              >
-                                <FaThumbsDown />
-                                <span>{reply.dislikeCount}</span>
-                              </button>
-                              <button
-                                onClick={() => setReplyingToCommentId(reply.id)}
-                                className="text-primary-100"
-                              >
-                                Reply
-                              </button>
-                              {reply.user._id === loggedInUserId && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setEditingReplyId(reply.id);
-                                      setEditingReplyContent(reply.content);
-                                    }}
-                                    className="text-blue-500"
-                                  >
-                                    <FaEdit />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteReply(reply.id)}
-                                    disabled={isDeletingReply}
-                                    className="text-red-500"
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                          {replyingToCommentId === reply.id && (
-                            <div className="ml-8 space-y-2">
-                              <textarea
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                rows={1}
-                                placeholder="Write a reply..."
-                                value={replyContent}
-                                onChange={(e) =>
-                                  setReplyContent(e.target.value)
-                                }
-                              />
-                              <div className="flex space-x-2">
-                                <button
-                                  className="px-4 py-1 bg-gray-300 text-gray-700 rounded-md"
-                                  onClick={() => setReplyingToCommentId(null)}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  className="px-4 py-1 bg-primary-100 text-white rounded-md"
-                                  disabled={isAddingReply}
-                                  onClick={() => handleAddReply(reply.id)}
-                                >
-                                  {isAddingReply ? "Replying..." : "Reply"}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    )}
-                </div>
-              )}
-            </div>
-          ))
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-4xl mx-auto mt-12"
+    >
+      <div className="bg-white rounded-xl shadow-md p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Comments ({totalComments})
+        </h2>
+
+        {/* Add Comment */}
+        <div className="mb-8">
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-transparent resize-none"
+            rows={4}
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={handleAddComment}
+              disabled={isAddingComment || !newComment.trim()}
+              className="px-6 py-2 bg-primary-100 text-white rounded-lg hover:bg-primary-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAddingComment ? <Spinner /> : "Post Comment"}
+            </button>
+          </div>
+        </div>
+
+        {/* Comments List */}
+        <div className="space-y-6">
+          <AnimatePresence>
+            {displayedComments.map((comment) => (
+              <CommentCard
+                key={comment.id}
+                comment={comment}
+                {...{
+                  editingCommentId,
+                  setEditingCommentId,
+                  editingCommentContent,
+                  setEditingCommentContent,
+                  handleEditComment,
+                  isEditingComment,
+                  handleDeleteComment,
+                  handleCommentReaction,
+                  replyingToCommentId,
+                  setReplyingToCommentId,
+                  replyContent,
+                  setReplyContent,
+                  handleAddReply,
+                  isAddingReply,
+                  loggedInUserId,
+                  editingReplyId,
+                  setEditingReplyId,
+                  editingReplyContent,
+                  setEditingReplyContent,
+                  handleEditReply,
+                  isEditingReply,
+                  handleDeleteReply,
+                  handleReplyReaction,
+                }}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Show More Comments */}
+        {comments.length > 3 && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowAllComments(!showAllComments)}
+            className="w-full mt-6 px-6 py-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+          >
+            {showAllComments ? (
+              <>
+                Show Less <FaChevronUp />
+              </>
+            ) : (
+              <>
+                Show More Comments <FaChevronDown />
+              </>
+            )}
+          </motion.button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

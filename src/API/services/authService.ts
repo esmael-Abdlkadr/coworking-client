@@ -118,19 +118,16 @@ const requestNewOTP = async (email: string) => {
   }
 };
 
-const refreshAccessToken = async (refreshToken: string) => {
+const refreshAccessToken = async () => {
   try {
-    const response = await apiCall<AuthResponse>(
+    const response = await apiCall<{ accessToken: string }>(
       API_ENDPOINTS.REFRESH_ACCESS_TOKEN,
-      { refreshToken }
+      {},
+      'POST'
     );
     return response;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("refreshAccessToken error", err.message);
-    } else {
-      console.error("refreshAccessToken error", err);
-    }
+  } catch (err) {
+    console.error('Refresh token error:', err);
     throw err;
   }
 };

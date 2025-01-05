@@ -12,6 +12,7 @@ import {
 
 import showToast from "../utils/toastHelper";
 import ConfirmationModal from "./ui/ConfirmationModal";
+import React from "react";
 
 interface EventCardProps {
   eventId: string;
@@ -138,7 +139,7 @@ const EventCard: FC<EventCardProps> = ({
           className={`uppercase text-lg md:text-2xl tracking-[3px] md:tracking-[5px] ${
             isOnPage ? "text-black/80" : "text-white/70"
           }`}
-        >
+        >S
           {eventCategory}
         </h3>
 

@@ -3,6 +3,7 @@ import EventCard from "../components/EventCard";
 import PageDisplayer from "../components/PageDisplayer";
 import { useGetAllEvents } from "../hooks/services";
 import { capitalizeTitle } from "../utils/capitalize";
+import React from "react";
 
 function Events() {
   const { data } = useGetAllEvents() as {
@@ -22,12 +23,12 @@ function Events() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
-  const eventsToShow = data.events.slice(
+  const eventsToShow = data?.events.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const totalPages = Math.ceil(data.events.length / itemsPerPage);
+  const totalPages = Math.ceil(data?.events?.length / itemsPerPage);
 
   const handlePageChange = (page: number): void => {
     setCurrentPage(page);
@@ -54,7 +55,7 @@ function Events() {
 
         {/* Events Grid */}
         <div className="grid grid-cols-1  gap-10">
-          {eventsToShow.map((event) => (
+          {eventsToShow?.map((event) => (
             <EventCard
               eventId={event.id}
               key={event.id}

@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useTrackedMutation } from "../utils/sentryUtil";
 import {
   ChangePassword,
   forgotPassword,
@@ -16,12 +16,8 @@ import { Role } from "../store/authStore";
 const useSignup = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: signup,
+  const { mutateAsync, isError } = useTrackedMutation(signup, {
     mutationKey: ["signup"],
-    onError: (error) => {
-      console.log(error);
-    },
     onSuccess: (data) => {
       if (data?.accessToken) {
         localStorage.setItem("accessToken", data.accessToken);
@@ -49,12 +45,8 @@ const useSignup = () => {
 const useLogin = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: login,
+  const { mutateAsync, isError } = useTrackedMutation(login, {
     mutationKey: ["login"],
-    onError: (error) => {
-      console.log(error);
-    },
     onSuccess: (data) => {
       if (data?.accessToken) {
         localStorage.setItem("accessToken", data.accessToken);
@@ -82,12 +74,8 @@ const useLogin = () => {
 const useLogout = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, clearUser } = useAuth();
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: logout,
+  const { mutateAsync, isError } = useTrackedMutation(logout, {
     mutationKey: ["logout"],
-    onError: (error) => {
-      console.log(error);
-    },
     onSuccess: () => {
       localStorage.removeItem("accessToken");
       setIsAuthenticated(false);
@@ -102,84 +90,77 @@ const useLogout = () => {
 };
 
 const useForgotPassword = () => {
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: forgotPassword,
+  const { mutateAsync, isError } = useTrackedMutation(forgotPassword, {
     mutationKey: ["forgotPassword"],
-    onError: (error) => {
-      console.log(error);
-    },
     onSuccess: (data) => {
       console.log(data);
     },
   });
   return { forgotPassword: mutateAsync, isError };
 };
+
 const useResetPassword = () => {
   const navigate = useNavigate();
 
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: ({ password, token }: { password: string; token: string }) =>
+  const { mutateAsync, isError } = useTrackedMutation(
+    ({ password, token }: { password: string; token: string }) =>
       resetPassowrd(password, token),
-    mutationKey: ["resetPassword"],
-    onError: (error: any) => {
-      console.error("Error resetting password:", error);
-    },
-    onSuccess: (data) => {
-      if (data) {
-        navigate("/signin");
-      }
-      // Redirect to login after success
-    },
-  });
+    {
+      mutationKey: ["resetPassword"],
+      onSuccess: (data) => {
+        if (data) {
+          navigate("/signin");
+        }
+        // Redirect to login after success
+      },
+    }
+  );
 
   return { resetPassword: mutateAsync, isError };
 };
 
 const useVerifyOTP = () => {
   const navigate = useNavigate();
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
-      verfiyOTP(email, otp),
-    mutationKey: ["verifyOTP"],
-    onError: (error) => {
-      console.log(error);
-    },
-    onSuccess: (data) => {
-      if (data) {
-        navigate("/dashboard");
-      }
-    },
-  });
+  const { mutateAsync, isError } = useTrackedMutation(
+    ({ email, otp }: { email: string; otp: string }) => verfiyOTP(email, otp),
+    {
+      mutationKey: ["verifyOTP"],
+      onSuccess: (data) => {
+        if (data) {
+          navigate("/dashboard");
+        }
+      },
+    }
+  );
   return { verifyOTP: mutateAsync, isError };
 };
 
 const useResendOTP = () => {
   const navigate = useNavigate();
-  const { mutateAsync, isError } = useMutation({
-    mutationFn: ({ email }: { email: string }) => requestNewOTP(email),
-    mutationKey: ["resendOTP"],
-    onError: (error) => {
-      console.log(error);
-    },
-    onSuccess: (data) => {
-      if (data) {
-        navigate("/verify-otp");
-      }
-    },
-  });
+  const { mutateAsync, isError } = useTrackedMutation(
+    ({ email }: { email: string }) => requestNewOTP(email),
+    {
+      mutationKey: ["resendOTP"],
+      onSuccess: (data) => {
+        if (data) {
+          navigate("/verify-otp");
+        }
+      },
+    }
+  );
   return { resendOTP: mutateAsync, isError };
 };
+
 const useChangePassword = () => {
-  const { mutateAsync, isError, isPending } = useMutation({
-    mutationFn: ChangePassword,
-    mutationKey: ["changePassword"],
-    onError: (error) => {
-      console.log(error);
-    },
-    onSuccess: (data) => {
-      console.log(data);
-    },
-  });
+  const { mutateAsync, isError, isPending } = useTrackedMutation(
+    ChangePassword,
+    {
+      mutationKey: ["changePassword"],
+      onSuccess: (data) => {
+        console.log(data);
+      },
+    }
+  );
   return { changePassword: mutateAsync, isError, isPending };
 };
 

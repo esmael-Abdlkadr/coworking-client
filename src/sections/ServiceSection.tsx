@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { useGetServices } from "../hooks/services";
 import Spinner from "../components/Spinner";
+import React from "react";
 interface ServiceSectionProps {
   isHome?: boolean;
 }
@@ -25,7 +26,7 @@ function ServiceSection({ isHome }: ServiceSectionProps) {
     "Event Spaces": FaCalendarAlt,
   };
   if (isLoading) return <Spinner />;
-  const services = data.data || [];
+  const services = data?.data || [];
   return (
     <section className="bg-white w-full h-auto py-9 px-4 sm:px-6 xl:px-24">
       {/* Header Section */}

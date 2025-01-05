@@ -1,15 +1,4 @@
 import * as Sentry from "@sentry/react";
-
-interface ImportMetaEnv {
-  readonly VITE_SENTRY_DSN: string;
-}
-
-declare global {
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-}
-
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   integrations: [

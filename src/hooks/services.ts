@@ -15,6 +15,12 @@ import {
   getEventById,
   updateComment,
   getTotalCommentsForBlog,
+  getAllCategoies,
+  getCategoryById,
+  getRecentBlgs,
+  bookmarkBlog,
+  getBookmarkStatus,
+  getBookmarkedBlogs,
 } from "../API/services/APiServices";
 import {
   cancelBooking,
@@ -35,11 +41,18 @@ import {
   addReply,
 } from "../API/services/APiServices";
 import { useTrackedMutation, useTrackedQuery } from "../utils/sentryUtil";
-
-const useGetBlogs = () => {
-  const { data, isError } = useTrackedQuery(["blogs"], getBlogs);
-  return { blogs: data, isError };
+import { BlogQueryParams } from "../types/clientType";
+const useGetBlogs = (params?: BlogQueryParams) => {
+  const { data, isError, isLoading } = useTrackedQuery(
+    ["blogs", JSON.stringify(params)],
+    () => getBlogs(params),
+    {
+      keepPreviousData: true,
+    }
+  );
+  return { blogs: data, isError, isLoading };
 };
+
 const useGetBlogBySlug = (slug: string) => {
   const { data, isError, isLoading } = useTrackedQuery(
     ["blog", slug],
@@ -64,12 +77,38 @@ const useGetServiceBySlug = (slug: string) => {
     () => getServiceBySlug(slug),
     { enabled: !!slug }
   );
-
-  console.log("Slug:", slug);
-  console.log("Hook data:", data);
   return { service: data, isLoading, isError };
 };
+const useGetRecentBlogs = (limit: number) => {
+  const { data, isError, isLoading } = useTrackedQuery(
+    ["recentBlogs", limit.toString()],
+    () => getRecentBlgs(limit)
+    // { enabled: !!limit }
+  );
+  return { recentBlogs: data, isError, isLoading };
+};
+const useBookmarkBlog = () => {
+  const { mutateAsync, isError } = useTrackedMutation((blogId: string) =>
+    bookmarkBlog(blogId)
+  );
+  return { bookmarkBlog: mutateAsync, isError };
+};
+const useGetBookmarkStatus = (blogId: string) => {
+  const { data, isError, isLoading } = useTrackedQuery(
+    ["bookmark", blogId],
+    () => getBookmarkStatus(blogId),
+    { enabled: !!blogId }
+  );
 
+  return { bookmarkStatus: data, isError, isLoading };
+};
+const useGetBookmarkedBlogs = () => {
+  const { data, isError, isLoading } = useTrackedQuery(
+    ["bookmarkedBlogs"],
+    getBookmarkedBlogs
+  );
+  return { bookmarkedBlogs: data?.data, isError, isLoading };
+};
 const useGetGallries = () => {
   const { data, isError } = useTrackedQuery(["galleries"], getGallries);
   return { galleries: data, isError };
@@ -347,12 +386,30 @@ const useGetTotalCommentsForBlog = (blogId: string) => {
   );
   return { totalComments: data, isError, isLoading };
 };
-
+const useGetAllCategories = () => {
+  const { data, isLoading, isError } = useTrackedQuery(
+    ["categories"],
+    getAllCategoies
+  );
+  return { data, isLoading, isError };
+};
+const useGetCategoryById = (id: string) => {
+  const { data, isLoading, isError } = useTrackedQuery(
+    ["category", id],
+    () => getCategoryById(id),
+    { enabled: !!id }
+  );
+  return { data, isLoading, isError };
+};
 export {
   useGetBlogs,
   useGetBlogBySlug,
   useGetServices,
   useGetServiceBySlug,
+  useGetRecentBlogs,
+  useBookmarkBlog,
+  useGetBookmarkStatus,
+  useGetBookmarkedBlogs,
   useGetGallries,
   useGetAllEvents,
   useGetEventById,
@@ -378,4 +435,6 @@ export {
   useCommentReaction,
   useAddReply,
   useGetTotalCommentsForBlog,
+  useGetAllCategories,
+  useGetCategoryById,
 };

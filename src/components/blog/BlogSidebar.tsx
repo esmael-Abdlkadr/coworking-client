@@ -1,8 +1,16 @@
-import CategoryCard from "./CategoryCard";
+import CategoryCard from "../CategoryCard";
 import contactUsImg from "/contact.jpg";
-import Button from "./ui/Button";
+import Button from "../ui/Button";
+import React from "react";
+import { useGetAllCategories } from "../../hooks/services";
+import Spinner from "../Spinner";
+import { Category } from "../../types/clientType";
 
 const BlogSidebar = () => {
+  const { data, isLoading } = useGetAllCategories();
+  if (isLoading) {
+    return <Spinner />;
+  }
   return (
     <aside className="space-y-10">
       <div className="space-y-6">
@@ -10,11 +18,9 @@ const BlogSidebar = () => {
           Filter by Categories
         </h3>
         <div className="grid grid-cols-2 gap-4">
-          {["Coworking", "Startups", "Technology", "Innovation"].map(
-            (category, index) => (
-              <CategoryCard key={index} CategoryName={category} />
-            )
-          )}
+          {data?.data?.map((category: Category) => (
+            <CategoryCard key={category._id} title={category.name} />
+          ))}
         </div>
       </div>
       <div className="relative rounded-xl overflow-hidden shadow-md">

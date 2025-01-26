@@ -1,13 +1,6 @@
+import React from "react";
 import { Link } from "react-router-dom";
-
-interface BlogProps {
-  img: string;
-  title: string;
-  writerName: string;
-  date: string;
-  tags: string;
-  route: string;
-}
+import { BlogProps } from "../../types/clientType";
 
 function Blog({ img, title, writerName, date, tags, route }: BlogProps) {
   return (

@@ -1,7 +1,7 @@
 import PageDisplayer from "../components/PageDisplayer";
 import { capitalizeTitle } from "../utils/capitalize";
 import img1 from "/detail1.jpg";
-import BlogPageCard from "../components/BlogPageCard";
+import BlogPageCard from "../components/blog/BlogPageCard";
 import Pagination from "../components/Pagination";
 import Banner from "../components/Banner";
 import { IoIosSearch } from "react-icons/io";
@@ -9,11 +9,34 @@ import CategoryCard from "../components/CategoryCard";
 import RecentPost from "../components/RecentPost";
 import contactUsImg from "/contact.jpg";
 import Button from "../components/ui/Button";
-import { useGetBlogs } from "../hooks/services";
+import {
+  useGetAllCategories,
+  useGetBlogs,
+  useGetRecentBlogs,
+} from "../hooks/services";
+import React, { useState } from "react";
+import Spinner from "../components/Spinner";
+import { Blog, Category } from "../types/clientType";
 
 function Blogs() {
-  const { blogs } = useGetBlogs();
-  // utility function to truncate conent.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const { blogs, isLoading } = useGetBlogs({
+    title: searchQuery,
+    category: selectedCategory,
+  });
+  const { data } = useGetAllCategories();
+  const { recentBlogs } = useGetRecentBlogs(3);
+  console.log("recentBlogs", recentBlogs);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // The search will automatically trigger due to the useGetBlogs dependency on searchQuery
+  };
+  const handleCategoryClick = (categoryName: string) => {
+    setSelectedCategory(categoryName === selectedCategory ? "" : categoryName);
+  };
+
+  // utility function to truncate content.
   const truncateConent = (content: string, maxLength: number) => {
     const plainText = content.replace(/<[^>]*>/g, ""); // Strip HTML tags
     const truncated =
@@ -22,6 +45,7 @@ function Blogs() {
         : plainText;
     return truncated;
   };
+  if (isLoading) return <Spinner />;
   return (
     <div>
       <PageDisplayer />
@@ -41,29 +65,18 @@ function Blogs() {
         <div className="grid grid-cols-1 lg:grid-cols-[75%,25%] gap-12">
           {/* Blog Cards */}
           <div className="space-y-10">
-            {blogs?.data?.map(
-              (blog: {
-                id: string;
-                image: string;
-                title: string;
-                author: { firstName: string; lastName: string };
-                createdAt: string;
-                category: string;
-                content: string;
-                slug: string;
-              }) => (
-                <BlogPageCard
-                  key={blog.id}
-                  img={blog.image}
-                  title={blog.title}
-                  writerName={`${blog.author.firstName} ${blog.author.lastName}`}
-                  date={new Date(blog.createdAt).toLocaleDateString()}
-                  tags={blog.category}
-                  content={truncateConent(blog.content, 100)} // Show only first 100 characters
-                  route={`/blogs/${blog.slug}`} // Link to full blog page
-                />
-              )
-            )}
+            {blogs?.data?.map((blog: Blog) => (
+              <BlogPageCard
+                key={blog.id}
+                img={blog.image}
+                title={blog.title}
+                writerName={`${blog.author.firstName} ${blog.author.lastName}`}
+                date={new Date(blog.createdAt).toLocaleDateString()}
+                tags={blog.category}
+                content={truncateConent(blog.content, 100)} // Show only first 100 characters
+                route={`/blogs/${blog.slug}`} // Link to full blog page
+              />
+            ))}
 
             <Pagination />
           </div>
@@ -75,15 +88,22 @@ function Blogs() {
               <label className="pl-4 border-l-4 border-primary-100 text-lg font-medium">
                 Search
               </label>
-              <div className="relative mt-2">
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <input
-                  placeholder="Search"
-                  className="w-full bg-[#cbd5e1] px-6 py-4 text-lg rounded-lg"
+                  type="text"
+                  placeholder="Search blogs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:border-primary-100"
                 />
-                <button className="absolute top-3 right-4">
-                  <IoIosSearch size={30} />
+                <button
+                  type="button"
+                  className="text-2xl text-primary-100"
+                  onClick={handleSearch}
+                >
+                  <IoIosSearch />
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Categories */}
@@ -92,27 +112,29 @@ function Blogs() {
                 Popular Categories
               </label>
               <div className="space-y-4 mt-4">
-                {["Economics", "Technology", "Startups", "Innovation"].map(
-                  (category, index) => (
-                    <CategoryCard key={index} CategoryName={category} />
-                  )
-                )}
+                {data?.data?.slice(0, 4).map((category: Category) => (
+                  <CategoryCard
+                    key={category._id}
+                    title={category.name}
+                    onClick={() => handleCategoryClick(category.name)}
+                    isSelected={category.name === selectedCategory}
+                  />
+                ))}
               </div>
             </div>
-
             {/* Recent Posts */}
-            <div>
-              <label className="pl-4 border-l-4 border-primary-100 text-2xl font-medium">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+              <h3 className="mb-6 border-l-4 border-primary-100 pl-4 text-2xl font-medium">
                 Recent Posts
-              </label>
-              <div className="space-y-4 mt-4">
-                {[...Array(3)].map((_, index) => (
+              </h3>
+              <div className="space-y-4">
+                {recentBlogs?.data?.map((blog: Blog) => (
                   <RecentPost
-                    key={index}
-                    img={img1}
-                    date="09-JUL-2024"
-                    title="The standard Lorem Ipsum passage, used since the 1500s"
-                    route={`/blogs/${index + 1}`}
+                    key={blog.id}
+                    img={blog.image}
+                    date={new Date(blog.createdAt).toLocaleDateString()}
+                    title={blog.title}
+                    route={`/blogs/${blog.slug}`}
                   />
                 ))}
               </div>

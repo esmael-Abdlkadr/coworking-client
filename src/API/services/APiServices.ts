@@ -115,7 +115,7 @@ const reserveSpot = async ({
       "POST"
     );
     return response;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("RSRV error", err);
     throw err;
   }
@@ -348,14 +348,92 @@ const getTotalCommentsForBlog = async (blogId: string) => {
     throw err;
   }
 };
+const getAllCategoies = async () => {
+  try {
+    const response = await apiCall(`${API_ENDPOINTS.CATEGORY}`, {}, "GET");
+    return response;
+  } catch (err: unknown) {
+    console.error("Failed to fetch total comments", err);
+    throw err;
+  }
+};
+const getCategoryById = async (id: string) => {
+  try {
+    const response = await apiCall(
+      `${API_ENDPOINTS.CATEGORY}/${id}`,
+      {},
+      "GET"
+    );
+    return response;
+  } catch (err: unknown) {
+    console.error("Failed to fetch total comments", err);
+    throw err;
+  }
+};
 
+// BLOGS.
+const getRecentBlgs = async (limit: number) => {
+  try {
+    const response = await apiCall(
+      `${API_ENDPOINTS.BLOG}/recent?${limit}`,
+      {},
+      "GET"
+    );
+    return response;
+  } catch (err: unknown) {
+    console.error("Blog error", err);
+    throw err;
+  }
+};
+const bookmarkBlog = async (blogId: string) => {
+  try {
+    console.log("blogId", blogId);
+    const response = await apiCall(
+      `${API_ENDPOINTS.BLOG}/bookmark/${blogId}`,
+      {},
+      "POST"
+    );
+    console.log("response", response);
+    return response;
+  } catch (err: unknown) {
+    console.error("Blog error", err);
+    throw err;
+  }
+};
+const getBookmarkStatus = async (blogId: string) => {
+  try {
+    const response = await apiCall(
+      `${API_ENDPOINTS.BLOG}/bookmark/${blogId}`,
+      {},
+      "GET"
+    );
+    console.log("response---bookmark", response);
+    return response;
+  } catch (err: unknown) {
+    console.error("Blog error", err);
+    throw err;
+  }
+};
+const getBookmarkedBlogs = async () => {
+  try {
+    const response = await apiCall(
+      `${API_ENDPOINTS.BLOG}/bookmarked`,
+      {},
+      "GET"
+    );
+    return response;
+  } catch (err: unknown) {
+    console.error("Blog error", err);
+    throw err;
+  }
+};
 export {
   createBooking,
   getBookings,
   getBooking,
   cancelBooking,
   updateBooking,
-  getAllEvents,
+  getRecentBlgs,
   getEventById,
   reserveSpot,
   getMyReservations,
@@ -374,4 +452,10 @@ export {
   commentReaction,
   addReply,
   getTotalCommentsForBlog,
+  getAllCategoies,
+  getCategoryById,
+  getAllEvents,
+  bookmarkBlog,
+  getBookmarkStatus,
+  getBookmarkedBlogs,
 };

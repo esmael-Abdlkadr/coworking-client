@@ -1,10 +1,12 @@
 import apiCall from "../../utils/apiHelper";
 import { API_ENDPOINTS } from "../apiEndpoints";
 import showToast from "../../utils/toastHelper";
+import { RefreshTokenResponse } from "../../types/clientType";
 
 interface AuthResponse {
   accessToken: string;
   user: {
+    preferences: any;
     id: string;
     firstName: string;
     lastName: string;
@@ -17,9 +19,14 @@ interface AuthResponse {
     updatedAt: string;
   };
 }
+
 interface SucessResponse {
   status: string;
   message: string;
+}
+
+interface OAuthLoginResponse extends AuthResponse {
+  refreshToken?: string;
 }
 
 // interface SignUpData {
@@ -49,6 +56,39 @@ const login = async (data: Record<string, unknown>) => {
     throw err;
   }
 };
+
+const googleLogin = async ({ accessToken }: { accessToken: string }): Promise<OAuthLoginResponse> => {
+  try {
+    // Redirect to the backend's Google auth endpoint
+    window.location.href = `${import.meta.env.VITE_BASE_API_URL}/auth/google`;
+    return Promise.resolve({} as OAuthLoginResponse);
+  } catch (err: unknown) {
+    console.error("Google login error:", err);
+    if (err instanceof Error) {
+      showToast(err.message, "error");
+    } else {
+      showToast("An error occurred during Google login", "error");
+    }
+    return Promise.reject(err);
+  }
+};
+
+const githubLogin = async ({ accessToken }: { accessToken: string }): Promise<OAuthLoginResponse> => {
+  try {
+    // Redirect to the backend's GitHub auth endpoint
+    window.location.href = `${import.meta.env.VITE_BASE_API_URL}/auth/github`;
+    return Promise.resolve({} as OAuthLoginResponse);
+  } catch (err: unknown) {
+    console.error("GitHub login error:", err);
+    if (err instanceof Error) {
+      showToast(err.message, "error");
+    } else {
+      showToast("An error occurred during GitHub login", "error");
+    }
+    return Promise.reject(err);
+  }
+};
+
 const logout = async () => {
   try {
     const response = await apiCall<SucessResponse>(API_ENDPOINTS.LOGOUT);
@@ -118,16 +158,16 @@ const requestNewOTP = async (email: string) => {
   }
 };
 
-const refreshAccessToken = async () => {
+const refreshAccessToken = async (): Promise<RefreshTokenResponse> => {
   try {
-    const response = await apiCall<{ accessToken: string }>(
+    const response = await apiCall<RefreshTokenResponse>(
       API_ENDPOINTS.REFRESH_ACCESS_TOKEN,
       {},
-      'POST'
+      "POST"
     );
     return response;
   } catch (err) {
-    console.error('Refresh token error:', err);
+    console.error("Refresh token error:", err);
     throw err;
   }
 };
@@ -157,6 +197,8 @@ const ChangePassword = async (data: {
 export {
   login,
   logout,
+  googleLogin,
+  githubLogin,
   forgotPassword,
   resetPassowrd,
   signup,

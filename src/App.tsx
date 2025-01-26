@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { toastOption, queryClient } from "./config/config";
 import Layout from "./pages/Layout";
 import Spinner from "./components/Spinner";
@@ -12,6 +13,7 @@ import NewBookingForm from "./components/dashbaord/NewBooking";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import React from "react";
 import ErrorBoundary from "./utils/ErrorBoundary";
+import OAuthCallback from "./utils/OauthCallback";
 
 // lazy load the components
 const Home = lazy(() => import("./pages/Home"));
@@ -28,16 +30,19 @@ const DashboardLayout = lazy(() => import("./pages/DahbaordLayout"));
 const BookingDetail = lazy(
   () => import("./components/dashbaord/BookingDetail")
 );
+const BookmarkedBlogs = lazy(() => import("./pages/bookmarkedBlogs"));
 const NotFound = lazy(() => import("./404"));
 
 function App() {
   return (
     <ErrorBoundary>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Suspense fallback={<Spinner />}>
             <Routes>
               {/* auth routes */}
+              <Route path="/auth/oauth/callback" element={<OAuthCallback />} />
               <Route path="/verify-otp" element={<OTPPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route
@@ -55,6 +60,10 @@ function App() {
                   <Route path="bookings" element={<BookingTable />} />
                   <Route path="booking/new" element={<NewBookingForm />} />
                   <Route path="booking/:id" element={<BookingDetail />} />
+                  <Route
+                    path="bookmarked-blogs"
+                    element={<BookmarkedBlogs />}
+                  />
                 </Route>
               </Route>
 
@@ -83,6 +92,7 @@ function App() {
           />
         </BrowserRouter>
       </QueryClientProvider>
+      </GoogleOAuthProvider>
     </ErrorBoundary>
   );
 }

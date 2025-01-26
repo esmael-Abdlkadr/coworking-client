@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import Tag from "./ui/Tag";
+import Tag from "../ui/Tag";
 import writer from "/team2.jpg";
 import { FiClock, FiCalendar, FiBookOpen } from "react-icons/fi";
 import React from "react";
@@ -23,9 +23,9 @@ const BlogHero = ({ blog }: { blog: Blog }) => {
       opacity: 1,
       transition: {
         duration: 0.5,
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
@@ -33,8 +33,8 @@ const BlogHero = ({ blog }: { blog: Blog }) => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.5 }
-    }
+      transition: { duration: 0.5 },
+    },
   };
 
   return (
@@ -62,7 +62,10 @@ const BlogHero = ({ blog }: { blog: Blog }) => {
         className="absolute inset-0 flex flex-col justify-center items-center text-center space-y-6 px-4 max-w-6xl mx-auto"
       >
         {/* Tags */}
-        <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-3">
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-wrap justify-center gap-3"
+        >
           {blog.tags?.map((tag: string, index: number) => (
             <Tag key={index} title={tag} />
           ))}

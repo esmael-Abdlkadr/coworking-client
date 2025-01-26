@@ -2,6 +2,8 @@ import { useTrackedMutation } from "../utils/sentryUtil";
 import {
   ChangePassword,
   forgotPassword,
+  githubLogin,
+  googleLogin,
   login,
   logout,
   requestNewOTP,
@@ -12,11 +14,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import useAuth from "../store/useAuth";
 import { Role } from "../store/authStore";
-
+import showToast from "../utils/toastHelper"; 
 const useSignup = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
-  const { mutateAsync, isError } = useTrackedMutation(signup, {
+  const { mutateAsync, isError, isPending } = useTrackedMutation(signup, {
     mutationKey: ["signup"],
     onSuccess: (data) => {
       if (data?.accessToken) {
@@ -39,13 +41,13 @@ const useSignup = () => {
       }
     },
   });
-  return { signup: mutateAsync, isError };
+  return { signup: mutateAsync, isError, signupPending: isPending };
 };
 
 const useLogin = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
-  const { mutateAsync, isError } = useTrackedMutation(login, {
+  const { mutateAsync, isError, isPending } = useTrackedMutation(login, {
     mutationKey: ["login"],
     onSuccess: (data) => {
       if (data?.accessToken) {
@@ -68,7 +70,123 @@ const useLogin = () => {
       }
     },
   });
-  return { login: mutateAsync, isError };
+  return { login: mutateAsync, isError, loginPending: isPending };
+};
+
+const useGoogleLoginHook = () => {
+  const navigate = useNavigate();
+  const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
+  
+  const { mutateAsync, isError, isPending } = useTrackedMutation(
+    ({ accessToken }: { accessToken: string }) => googleLogin({ accessToken }),
+    {
+      mutationKey: ["googleLogin"],
+      onSuccess: (data) => {
+        if (!data?.accessToken || !data?.user) {
+          showToast("Invalid response from Google login", "error");
+          return;
+        }
+
+        try {
+          localStorage.setItem("accessToken", data.accessToken);
+          setIsAuthenticated(true);
+          setUser({
+            id: data.user.id,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+            email: data.user.email,
+            role: data.user.role as unknown as Role,
+            permissions: data.user.permissions,
+            active: data.user.active,
+            emailVerified: data.user.emailVerified,
+            createdAt: data.user.createdAt,
+            updatedAt: data.user.updatedAt,
+          });
+          
+          // Store any additional user preferences
+          if (data.user.preferences) {
+            localStorage.setItem("userPreferences", JSON.stringify(data.user.preferences));
+          }
+          
+          navigate("/");
+        } catch (error) {
+          console.error("Error processing Google login response:", error);
+          showToast("Error setting up user session", "error");
+          setIsAuthenticated(false);
+          localStorage.removeItem("accessToken");
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      onError: (error: Error) => {
+        setIsLoading(false);
+        setIsAuthenticated(false);
+        localStorage.removeItem("accessToken");
+        showToast(error.message || "Failed to login with Google", "error");
+        navigate("/auth?mode=signin");
+      }
+    }
+  );
+  
+  return { googleLogin: mutateAsync, isError, googleLoginPending: isPending };
+};
+
+const useGithubLoginHook = () => {
+  const navigate = useNavigate();
+  const { setIsAuthenticated, setIsLoading, setUser } = useAuth();
+  
+  const { mutateAsync, isError, isPending } = useTrackedMutation(
+    ({ accessToken }: { accessToken: string }) => githubLogin({ accessToken }),
+    {
+      mutationKey: ["githubLogin"],
+      onSuccess: (data) => {
+        if (!data?.accessToken || !data?.user) {
+          showToast("Invalid response from GitHub login", "error");
+          return;
+        }
+
+        try {
+          localStorage.setItem("accessToken", data.accessToken);
+          setIsAuthenticated(true);
+          setUser({
+            id: data.user.id,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+            email: data.user.email,
+            role: data.user.role as unknown as Role,
+            permissions: data.user.permissions,
+            active: data.user.active,
+            emailVerified: data.user.emailVerified,
+            createdAt: data.user.createdAt,
+            updatedAt: data.user.updatedAt,
+          });
+          
+          // Store any additional user preferences
+          if (data.user.preferences) {
+            localStorage.setItem("userPreferences", JSON.stringify(data.user.preferences));
+          }
+          
+          navigate("/");
+        } catch (error) {
+          console.error("Error processing GitHub login response:", error);
+          showToast("Error setting up user session", "error");
+          setIsAuthenticated(false);
+          localStorage.removeItem("accessToken");
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      onError: (error: Error) => {
+        setIsLoading(false);
+        setIsAuthenticated(false);
+        localStorage.removeItem("accessToken");
+        showToast(error.message || "Failed to login with GitHub", "error");
+        navigate("/auth?mode=signin");
+      }
+    }
+  );
+  
+  return { githubLogin: mutateAsync, isError, githubPending: isPending };
 };
 
 const useLogout = () => {
@@ -167,6 +285,8 @@ const useChangePassword = () => {
 export {
   useSignup,
   useLogin,
+  useGoogleLoginHook,
+  useGithubLoginHook,
   useForgotPassword,
   useResetPassword,
   useLogout,

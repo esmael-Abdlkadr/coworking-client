@@ -1,11 +1,13 @@
 import { NavLink } from "react-router-dom";
 import { FaHome, FaCalendarAlt, FaUserCog } from "react-icons/fa";
+import React from "react";ct-icons/fi";
 
 function Sidebar() {
   const navItems = [
     { path: "/dashboard", label: "Home", icon: <FaHome /> },
     { path: "/dashboard/bookings", label: "Bookings", icon: <FaCalendarAlt /> },
     { path: "/dashboard/settings", label: "Settings", icon: <FaUserCog /> },
+ 
   ];
 
   return (

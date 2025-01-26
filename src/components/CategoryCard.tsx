@@ -1,11 +1,25 @@
-interface categoryCardProps {
-  CategoryName: string;
+import React from "react";
+
+interface CategoryCardProps {
+  title: string;
+  onClick?: () => void;
+  isSelected?: boolean;
 }
-function CategoryCard({ CategoryName }: categoryCardProps) {
+
+function CategoryCard({ title, onClick, isSelected }: CategoryCardProps) {
   return (
-    <button className="bg-[#cbd5e1] text-[#64748b]  px-5 py-3 text-lg text-start  font-medium">
-      {CategoryName}
-    </button>
+    <div 
+      onClick={onClick}
+      className={`flex items-center justify-center w-full p-3 rounded-lg ${
+        isSelected 
+          ? 'bg-primary-100 text-white' 
+          : 'bg-gray-100 hover:bg-gray-200'
+      } transition-colors cursor-pointer`}
+    >
+      <span className={`font-medium text-center ${isSelected ? 'text-white' : 'text-gray-700'}`}>
+        {title}
+      </span>
+    </div>
   );
 }
 

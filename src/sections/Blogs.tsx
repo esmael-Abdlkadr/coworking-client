@@ -1,7 +1,9 @@
+import React from "react";
 import Banner from "../components/Banner";
-import Blog from "../components/Blog";
+import BlogComponent from "../components/blog/Blog";
 import { useGetBlogs } from "../hooks/services";
 import { capitalizeTitle } from "../utils/capitalize";
+import { Blog } from "../types/clientType";
 function Blogs() {
   const { blogs } = useGetBlogs();
 
@@ -25,27 +27,17 @@ function Blogs() {
 
         {/* Blog Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogs?.data.map(
-            (blog: {
-              _id: string;
-              image: string;
-              title: string;
-              author: { firstName: string; lastName: string };
-              createdAt: string;
-              category: string;
-              slug: string;
-            }) => (
-              <Blog
-                key={blog._id}
-                img={blog.image}
-                title={blog.title}
-                writerName={`${blog.author?.firstName} ${blog?.author?.lastName}`}
-                date={new Date(blog.createdAt).toLocaleDateString()}
-                tags={blog.category}
-                route={`/blogs/${blog.slug}`}
-              />
-            )
-          )}
+          {blogs?.data.map((blog: Blog) => (
+            <BlogComponent
+              key={blog._id}
+              img={blog.image}
+              title={blog.title}
+              writerName={`${blog.author?.firstName} ${blog?.author?.lastName}`}
+              date={new Date(blog.createdAt).toLocaleDateString()}
+              tags={blog.category}
+              route={`/blogs/${blog.slug}`}
+            />
+          ))}
         </div>
       </div>
 

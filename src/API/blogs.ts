@@ -3,9 +3,27 @@ import axios, { AxiosResponse } from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_BASE_API_URL || "http://localhost:5000/api";
 
-const getBlogs = async () => {
+interface BlogQueryParams {
+  title?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
+}
+
+const getBlogs = async (params?: BlogQueryParams) => {
   try {
-    const response: AxiosResponse = await axios.get(`${API_BASE_URL}/blog`);
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value.toString());
+      });
+    }
+
+    const queryString = queryParams.toString();
+    const url = queryString
+      ? `${API_BASE_URL}/blog?${queryString}`
+      : `${API_BASE_URL}/blog`;
+    const response: AxiosResponse = await axios.get(url);
     return response.data;
   } catch (error: any) {
     if (error.response) {

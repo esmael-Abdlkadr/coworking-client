@@ -10,6 +10,8 @@ import Dropdown from "../components/ui/DropDown";
 import Modal from "../components/ui/Modal";
 import ProfileSettings from "../components/dashbaord/ProfileForm";
 import PasswordManager from "../components/dashbaord/PasswordManager";
+import React from "react";
+import { FiBookmark } from "react-icons/fi";
 
 const navItems = [
   { label: "Bookings", path: "/dashboard/bookings", icon: AiOutlineCalendar },
@@ -17,6 +19,11 @@ const navItems = [
     label: "NewBooking",
     path: "/dashboard/booking/new",
     icon: AiOutlinePlusCircle,
+  },
+  {
+    path: "/dashboard/bookmarked-blogs",
+    label: "Saved Blogs",
+    icon: FiBookmark,
   },
 ];
 

@@ -19,30 +19,14 @@ import Spinner from "../components/Spinner";
 import useAuth from "../store/useAuth";
 import socket from "../utils/socket";
 import PageDisplayer from "../components/PageDisplayer";
-import BlogHero from "../components/BlogHero";
-import BlogInteractions from "../components/BlogInteractions";
-import BlogContent from "../components/BlogContent";
-import BlogComments from "../components/BlogComments";
-import BlogSidebar from "../components/BlogSidebar";
+import BlogHero from "../components/blog/BlogHero";
+import BlogInteractions from "../components/blog/BlogInteractions";
+import BlogContent from "../components/blog/BlogContent";
+import BlogComments from "../components/blog/BlogComments";
+import BlogSidebar from "../components/blog/BlogSidebar";
 import Blogs from "../sections/Blogs";
 import React from "react";
-
-interface Comment {
-  id: string;
-  content: string;
-  user: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    id: string;
-  };
-  createdAt: string;
-  likeCount: number;
-  dislikeCount: number;
-  replies: Comment[];
-  reaction: string | null;
-}
-
+import { Comment } from "../types/clientType";
 function BlogDetail() {
   const { slug } = useParams();
   const { blog, isError, isLoading } = useGetBlogBySlug(slug as string);
@@ -134,7 +118,6 @@ function BlogDetail() {
         dislikeCount: number;
         type: string;
       }) => {
-    
         setComments((prevComments) =>
           prevComments.map((comment) =>
             comment.id === reaction.commentId
@@ -217,7 +200,7 @@ function BlogDetail() {
         userReaction &&
         typeof userReaction === "object" &&
         "data" in userReaction &&
-        (userReaction as { data: { type: string } }).data.type === "like"
+        (userReaction as { data: { type: string } })?.data?.type === "like"
       ) {
         setLikeCount((prev) => prev - 1);
         await removeReaction({ blogId: blog?.data.id, type: "like" });
@@ -226,7 +209,7 @@ function BlogDetail() {
           userReaction &&
           typeof userReaction === "object" &&
           "data" in userReaction &&
-          (userReaction as { data: { type: string } }).data.type === "dislike"
+          (userReaction as { data: { type: string } })?.data?.type === "dislike"
         ) {
           setDislikeCount((prev) => prev - 1);
         }
@@ -239,7 +222,7 @@ function BlogDetail() {
         userReaction &&
         typeof userReaction === "object" &&
         "data" in userReaction &&
-        (userReaction as { data: { type: string } }).data.type === "like"
+        (userReaction as { data: { type: string } })?.data?.type === "like"
       ) {
         setLikeCount((prev) => prev + 1);
       } else {
@@ -247,7 +230,7 @@ function BlogDetail() {
           userReaction &&
           typeof userReaction === "object" &&
           "data" in userReaction &&
-          (userReaction as { data: { type: string } }).data.type === "dislike"
+          (userReaction as { data: { type: string } })?.data?.type === "dislike"
         ) {
           setDislikeCount((prev) => prev + 1);
         }
@@ -262,7 +245,7 @@ function BlogDetail() {
         userReaction &&
         typeof userReaction === "object" &&
         "data" in userReaction &&
-        (userReaction as { data: { type: string } }).data.type === "dislike"
+        (userReaction as { data: { type: string } })?.data?.type === "dislike"
       ) {
         setDislikeCount((prev) => prev - 1);
         await removeReaction({ blogId: blog?.data.id, type: "dislike" });
@@ -271,7 +254,7 @@ function BlogDetail() {
           userReaction &&
           typeof userReaction === "object" &&
           "data" in userReaction &&
-          (userReaction as { data: { type: string } }).data.type === "like"
+          (userReaction as { data: { type: string } })?.data?.type === "like"
         ) {
           setLikeCount((prev) => prev - 1);
         }
@@ -284,7 +267,7 @@ function BlogDetail() {
         userReaction &&
         typeof userReaction === "object" &&
         "data" in userReaction &&
-        (userReaction as { data: { type: string } }).data.type === "dislike"
+        (userReaction as { data: { type: string } })?.data?.type === "dislike"
       ) {
         setDislikeCount((prev) => prev + 1);
       } else {
@@ -292,7 +275,7 @@ function BlogDetail() {
           userReaction &&
           typeof userReaction === "object" &&
           "data" in userReaction &&
-          (userReaction as { data: { type: string } }).data.type === "like"
+          (userReaction as { data: { type: string } })?.data?.type === "like"
         ) {
           setLikeCount((prev) => prev + 1);
         }
@@ -315,7 +298,7 @@ function BlogDetail() {
           handleDislike={handleDislike}
         />
         <div className="grid grid-cols-1 lg:grid-cols-[70%,30%] gap-12">
-          <BlogContent content={blog.data.content} />
+          <BlogContent blog={blog.data} />
           <BlogSidebar />
         </div>
         <BlogComments

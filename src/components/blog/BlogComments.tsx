@@ -9,77 +9,14 @@ import {
   FaReply,
 } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
-import Spinner from "./Spinner";
+import Spinner from "../Spinner";
 import { useState } from "react";
 import React from "react";
-
-interface BlogCommentsProps {
-  comments: Array<{
-    id: string;
-    user: {
-      _id: string;
-      firstName: string;
-      lastName: string;
-    };
-    content: string;
-    createdAt: string;
-    reaction: string | null;
-    likeCount: number;
-    dislikeCount: number;
-    replies: Array<{
-      id: string;
-      user: {
-        _id: string;
-        firstName: string;
-        lastName: string;
-      };
-      content: string;
-      createdAt: string;
-      reaction: string | null;
-      likeCount: number;
-      dislikeCount: number;
-    }>;
-  }>;
-  newComment: string;
-  setNewComment: (comment: string) => void;
-  handleAddComment: () => void;
-  isAddingComment: boolean;
-  editingCommentId: string | null;
-  setEditingCommentId: (id: string | null) => void;
-  editingCommentContent: string;
-  setEditingCommentContent: (content: string) => void;
-  handleEditComment: (id: string) => void;
-  isEditingComment: boolean;
-  handleDeleteComment: (id: string) => void;
-  isDeletingComment: boolean;
-  handleCommentReaction: (id: string, reaction: string) => void;
-  replyingToCommentId: string | null;
-  setReplyingToCommentId: (id: string | null) => void;
-  replyContent: string;
-  setReplyContent: (content: string) => void;
-  handleAddReply: (id: string) => void;
-  isAddingReply: boolean;
-  commentsLoading: boolean;
-  commentsError: boolean;
-  loggedInUserId: string;
-  handleReplyReaction: (id: string, reaction: string) => void;
-  editingReplyId: string | null;
-  setEditingReplyId: (id: string | null) => void;
-  editingReplyContent: string;
-  setEditingReplyContent: (content: string) => void;
-  handleEditReply: (id: string) => void;
-  isEditingReply: boolean;
-  handleDeleteReply: (id: string) => void;
-  isDeletingReply: boolean;
-  blogId: string;
-  totalComments: number;
-}
-
+import { BlogCommentsProps } from "../../types/clientType";
 const CommentCard = ({ comment, isReply = false, ...props }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const hasReplies = comment.replies && comment.replies.length > 0;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -105,7 +42,9 @@ const CommentCard = ({ comment, isReply = false, ...props }) => {
               {comment.user.firstName} {comment.user.lastName}
             </span>
             <span className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(comment.createdAt), {
+                addSuffix: true,
+              })}
             </span>
           </div>
 
@@ -174,7 +113,7 @@ const CommentCard = ({ comment, isReply = false, ...props }) => {
                 <span>Reply</span>
               </button>
             )}
-            
+
             {/* Show Replies Toggle */}
             {!isReply && hasReplies && (
               <button
@@ -183,7 +122,8 @@ const CommentCard = ({ comment, isReply = false, ...props }) => {
               >
                 {showReplies ? <FaChevronUp /> : <FaChevronDown />}
                 <span>
-                  {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                  {comment.replies.length}{" "}
+                  {comment.replies.length === 1 ? "reply" : "replies"}
                 </span>
               </button>
             )}
@@ -306,7 +246,7 @@ const BlogComments = ({
   handleEditComment,
   isEditingComment,
   handleDeleteComment,
-  isDeletingComment,
+  // isDeletingComment,
   handleCommentReaction,
   replyingToCommentId,
   setReplyingToCommentId,
@@ -325,8 +265,8 @@ const BlogComments = ({
   handleEditReply,
   isEditingReply,
   handleDeleteReply,
-  isDeletingReply,
-  blogId,
+  // isDeletingReply,
+  // blogId,
   totalComments,
 }: BlogCommentsProps) => {
   const [showAllComments, setShowAllComments] = useState(false);

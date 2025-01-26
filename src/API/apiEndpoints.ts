@@ -1,6 +1,8 @@
 export const API_ENDPOINTS = {
   SIGNUP: "/auth/signup",
   LOGIN: "/auth/login",
+  GOOGLE_LOGIN: "/auth/google",
+  GITHUB_LOGIN: "/auth/github",
   LOGOUT: "/auth/logout",
   FOROGT_PASSWORD: "/auth/forgotPassword",
   RESET_PASSWORD: "/auth/resetPassword",
@@ -14,4 +16,6 @@ export const API_ENDPOINTS = {
   RSRV: "/reserveSpot",
   COMMENT: "/comments",
   LIKE: "/like",
+  CATEGORY: "/categories",
+  BLOG: "/blog",
 };

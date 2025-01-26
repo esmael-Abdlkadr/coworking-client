@@ -41,7 +41,9 @@ function ProtectedRoute() {
 
   if (!isAuthenticated) {
     const currentPath = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/auth?mode=signin&redirect=${currentPath}`} replace />;
+    return (
+      <Navigate to={`/auth?mode=signin&redirect=${currentPath}`} replace />
+    );
   }
 
   return <Outlet />;

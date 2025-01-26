@@ -1,8 +1,13 @@
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { refreshAccessToken } from "./services/authService";
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
+  resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
 }> = [];
 
@@ -19,13 +24,13 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BASE_API_URL,
-  timeout: 30000, 
+  timeout: 30000,
   withCredentials: true,
   headers: {
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-  }
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+    Expires: "0",
+  },
 });
 
 instance.interceptors.request.use(
@@ -36,40 +41,47 @@ instance.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 instance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as CustomAxiosRequestConfig;
 
-    // If the error is 401 and we haven't retried yet
-    if (error?.response?.status === 401 && !originalRequest._retry) {
+    // If there's no config or it's already been retried, reject
+    if (
+      !originalRequest ||
+      (originalRequest._retry && error.response?.status !== 401)
+    ) {
+      return Promise.reject(error);
+    }
+
+    // Handle 401 errors
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // If we're already refreshing, add to queue
+      // If already refreshing, queue the request
       if (isRefreshing) {
-        try {
-          const token = await new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          });
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return instance(originalRequest);
-        } catch (err) {
-          return Promise.reject(err);
-        }
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return instance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
 
       isRefreshing = true;
 
       try {
-        const { accessToken } = await refreshAccessToken();
+        const response = await refreshAccessToken();
+        const { accessToken } = response;
+
         localStorage.setItem("accessToken", accessToken);
-        
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
         processQueue(null, accessToken);
         return instance(originalRequest);
       } catch (refreshError) {
@@ -82,31 +94,7 @@ instance.interceptors.response.use(
       }
     }
 
-    // Add request retry interceptor
-    const { config, message } = error;
-    if (!config || !config.retry) {
-      return Promise.reject(error);
-    }
-    
-    // Set the retry count
-    config.retryCount = config.retryCount || 0;
-    
-    // If we've retried too many times or it's not a network error, reject
-    if (config.retryCount >= 3 || (message !== 'Network Error' && error?.response)) {
-      return Promise.reject(error);
-    }
-    
-    // Increase the retry count
-    config.retryCount += 1;
-    
-    // Create a new promise to handle the retry
-    const backoff = new Promise((resolve) => {
-      setTimeout(() => resolve(null), 1000 * config.retryCount);
-    });
-    
-    // Wait for the backoff then retry the request
-    await backoff;
-    return instance(config);
+    return Promise.reject(error);
   }
 );
 

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaGithub, FaGoogle } from "react-icons/fa";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useGithubLoginHook,
+  useGoogleLoginHook,
   useLogin,
   useSignup,
 } from "../hooks/auth";
@@ -13,7 +15,6 @@ import { loginSchema, signupSchema } from "../schema/formSchema";
 import { IFormInput } from "../types/clientType";
 import showToast from "../utils/toastHelper";
 import CustomeInput from "../components/ui/CustomeInput";
-
 function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -29,6 +30,7 @@ function AuthPage() {
   const currentSchema = isSignIn ? loginSchema : signupSchema;
   const { login, loginPending } = useLogin();
   const { signup, signupPending } = useSignup();
+  const { googleLogin, googleLoginPending } = useGoogleLoginHook();
   const { githubLogin, githubPending } = useGithubLoginHook();
 
   const {
@@ -46,56 +48,23 @@ function AuthPage() {
     resolver: zodResolver(currentSchema),
   });
 
+  // Google OAuth Handler
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        await googleLogin({ accessToken: tokenResponse.access_token });
+      } catch (error) {
+        showToast(error.error_description || "An error occurred", "error");
+      }
+    },
+    onError: (error) => {
+      showToast(error.error_description || "An error occurred", "error");
+    },
+  });
   // GitHub OAuth Handler
-  const handleGithubLogin = async () => {
-    try {
-      const githubAuthUrl = `${import.meta.env.VITE_BASE_API_URL}/auth/github`;
-      // Store the current URL in session storage to redirect back after OAuth
-      sessionStorage.setItem('oauth_redirect', window.location.href);
-    
-      //popup window for GitHub OAuth
-      const width = 600;
-      const height = 700;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-      
-      const popup = window.open(
-        githubAuthUrl,
-        'github-oauth',
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
-
-      // Add message listener for the OAuth callback
-      window.addEventListener('message', async (event) => {
-        // Verify origin
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data?.type === 'github-oauth-success' && event.data?.accessToken) {
-          try {
-            await githubLogin({ accessToken: event.data.accessToken });
-            popup?.close();
-          } catch (error) {
-            console.error('GitHub login error:', error);
-            showToast(
-              error instanceof Error ? error.message : 'Failed to login with GitHub',
-              'error'
-            );
-          }
-        } else if (event.data?.type === 'github-oauth-error') {
-          console.error('GitHub OAuth error:', event.data.error);
-          showToast(event.data.error || 'Failed to connect with GitHub', 'error');
-        }
-      });
-
-    } catch (error) {
-      console.error("GitHub OAuth error:", error);
-      showToast(
-        error instanceof Error ? error.message : "Failed to connect with GitHub",
-        'error'
-      );
-    }
+  const handleGithubLogin = () => {
+    window.location.href = `${import.meta.env.VITE_BASE_API_URL}/auth/github`;
   };
-
   // Handle Remember Me toggle
   const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
@@ -162,25 +131,19 @@ function AuthPage() {
           </div>
 
           {/* Social Login Buttons */}
-          {/* <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <button
-              type="button"
-              className={`flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition duration-200 ${
-                githubPending ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50'
-              }`}
-              onClick={handleGithubLogin}
-              disabled={githubPending}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+              onClick={() => handleGoogleLOgin}
             >
-              {githubPending ? (
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-              ) : (
-                <FaGithub className="text-gray-900" />
-              )}
-              <span className="text-sm font-medium">
-                {githubPending ? 'Connecting...' : 'GitHub'}
-              </span>
+              <FaGoogle className="text-red-500" />
+              <span className="text-sm font-medium">Google</span>
             </button>
-          </div> */}
+            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200">
+              <FaGithub className="text-gray-900" />
+              <span className="text-sm font-medium">GitHub</span>
+            </button>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

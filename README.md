@@ -1,50 +1,86 @@
-# React + TypeScript + Vite
+# Client Side
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the client side of the coworking project.
 
-Currently, two official plugins are available:
+## Table of Contents
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [Features](#features)
+- [Server Features](#server-features)
+- [Getting Started](#getting-started)
+- [Build](#build)
+- [Preview](#preview)
+- [Lint](#lint)
+- [Clone the Repository](#clone-the-repository)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Routing**: Handled by `react-router-dom` with lazy loading for better performance.
+- **State Management**: Using `zustand` for state management.
+- **Forms**: Managed with `react-hook-form` and validation using `yup`.
+- **OAuth**: Google OAuth integration using `@react-oauth/google`.
+- **Data Fetching**: Handled by `@tanstack/react-query`.
+- **Notifications**: Using `react-hot-toast` for toast notifications.
+- **Error Handling**: Implemented with an `ErrorBoundary` component.
+- **Styling**: Tailwind CSS for styling and `clsx` for conditional class names.
 
-- Configure the top-level `parserOptions` property like this:
+## Server Features
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **Authentication**: Handled by `passport` with strategies for GitHub and Google OAuth.
+- **Database**: Using `MongoDB` with `mongoose` for data modeling.
+- **Real-time Communication**: Implemented with `socket.io`.
+- **Email Service**: Using `nodemailer` for sending emails.
+- **File Uploads**: Managed with `multer` for handling multipart/form-data.
+
+## Getting Started
+
+To get started, follow these steps:
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/esmael-Abdlkadr/coworking-client.git
+   cd coworking-client
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Run the development server**:
+   ```bash
+   pnpm run dev
+   ```
+
+## Build
+
+To build the project, run:
+
+```bash
+pnpm run build
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Preview
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+To preview the production build, run:
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+pnpm run preview
+```
+
+## Lint
+
+To lint the project, run:
+
+```bash
+pnpm run lint
+```
+
+## Clone the Repository
+
+To clone the repository, use the following command:
+
+```bash
+git clone https://github.com/esmael-Abdlkadr/coworking-client.git
 ```
